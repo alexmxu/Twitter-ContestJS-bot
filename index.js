@@ -1,6 +1,6 @@
 var API = require('./api-functions'),
 	RATE_LIMIT_EXCEEDED_TIMEOUT = 1000 * 60 * 10, 	// 10 minutes
-	RETWEET_TIMEOUT = 1000 * 5; 					// 5 seconds
+	RETWEET_TIMEOUT = 1000 * 5 * 4; 					// 5 * 4 seconds
 
 // Main self-initializing function
 (function() {
