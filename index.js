@@ -1,6 +1,6 @@
 var API = require('./api-functions'),
 	RATE_LIMIT_EXCEEDED_TIMEOUT = 1000 * 60 * 10, 	// 10 minutes
-	RETWEET_TIMEOUT = 1000 * 5 * 4; 					// 5 * 4 seconds
+	RETWEET_TIMEOUT = 1000 * 5; 					// 5 * 1.2 seconds
 
 // Main self-initializing function
 (function() {
@@ -70,6 +70,9 @@ var API = require('./api-functions'),
   				// Retweet
 				API.retweet(searchItem.id_str);
 				console.log("Retweet", searchItem.id);
+
+
+
 
   				// Check if we also need to Favorite
   				if (searchItem.text.toLowerCase().indexOf("fav") > -1) {
