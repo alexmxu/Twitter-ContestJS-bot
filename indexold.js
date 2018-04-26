@@ -6,7 +6,8 @@ var API = require('./api-functions'),
 (function() {
 	var last_tweet_id = 0,
 		searchResultsArr = [],
-		blockedUsers = [];
+		blockedUsers = [],
+		badTweetIds = [];
 
 	/** The Callback function for the Search API */
 	var searchCallback = function (response) {
@@ -15,11 +16,14 @@ var API = require('./api-functions'),
 		// Iterating through tweets returned by the Search
 		payload.statuses.forEach(function (searchItem) {
 
-			// Further filtering out the retweets and tweets from blocked users
-			if (!searchItem.retweeted_status && blockedUsers.indexOf(searchItem.user.id) === -1) {
 
-				// Save the search item in the Search Results array
-				searchResultsArr.push(searchItem);
+			// Further filtering out the retweets and tweets from blocked users
+			if (searchItem.retweet_count > 8 && !searchItem.retweeted_status && blockedUsers.indexOf(searchItem.user.id) === -1) {
+
+				if (badTweetIds.indexOf(searchItem.id) < 0){
+					// Save the search item in the Search Results array
+					searchResultsArr.push(searchItem);
+				}
 			}
 		});
 
@@ -46,8 +50,8 @@ var API = require('./api-functions'),
   	var search = function () {
   		API.search({
   			// Without having the word "vote", and filtering out retweets - as much as possible
-			text: "retweet to win -vote -filter:retweets OR RT to win -vote -filter:retweets", 
-			result_type: "recent",
+      		text: "retweet to win -vote -filter:retweets OR RT to win -vote -filter:retweets",
+			result_type: "mixed",
 			callback: searchCallback,
 			error_callback: errorHandler,
 			since_id: last_tweet_id
@@ -68,10 +72,13 @@ var API = require('./api-functions'),
   				searchResultsArr.shift();
   				
   				// Retweet
-				API.retweet(searchItem.id_str);
-				console.log("Retweet", searchItem.id);
-
-
+				API.retweet(searchItem.id_str)
+					.catch(() => {
+						console.error('[Error] RT Failed for', searchItem.id, ', adding to blacklist /probably already retweeted/');
+						badTweetIds.push(searchItem.id);
+					 })
+				    console.log("Retweet", searchItem.id_str);
+        		console.log("user is ", searchItem.user.screen_name);
 
 
   				// Check if we also need to Favorite
@@ -79,6 +86,10 @@ var API = require('./api-functions'),
   					API.favorite(searchItem.id_str);
   					console.log("Favorite", searchItem.id);
   				} 
+		          if (searchItem.text.toLowerCase().indexOf("like") > -1){
+		            API.favorite(searchItem.id_str);
+		            console.log("Like", searchItem.id);
+		          }
 
   				if (searchItem.text.toLowerCase().indexOf("follow") > -1) {
   					API.follow(searchItem.user.id_str);
